@@ -7,5 +7,5 @@
 #       or equal to the generated config header
 #
 linker.cmd: package/cfg/MAX30105_pem4f.xdl
-	$(SED) 's"^\"\(package/cfg/MAX30105_pem4fcfg.cmd\)\"$""\"/Users/dave/Documents/GitHub/FinBit-MSP432/i2c_MAX30105_STABLE/Debug/configPkg/\1\""' package/cfg/MAX30105_pem4f.xdl > $@
+	$(SED) 's"^\"\(package/cfg/MAX30105_pem4fcfg.cmd\)\"$""\"/Users/dave/Documents/GitHub/FinBit_MSP432/i2c_MAX30105_STABLE/Debug/configPkg/\1\""' package/cfg/MAX30105_pem4f.xdl > $@
 	-$(SETDATE) -r:max package/cfg/MAX30105_pem4f.h compiler.opt compiler.opt.defs

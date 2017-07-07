@@ -925,6 +925,10 @@ Void taskFxn(UArg arg0, UArg arg1) {
         particleSensor.setPulseAmplitudeRed(i2c, 0x00);   //Turn off Red LED
         particleSensor.setPulseAmplitudeIR(i2c, 0x00);    //Turn off IR LED
 
+        Task_sleep(1000);
+
+
+
         // Close I2C Bus
 
         I2C_close(i2c);
