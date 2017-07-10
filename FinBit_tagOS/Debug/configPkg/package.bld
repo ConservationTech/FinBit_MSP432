@@ -11,7 +11,7 @@ var makeAssembly = false;
 var Executable = xdc.module('xdc.bld.Executable');
 
 var exeOpts = new Executable.Attrs({
-        cfgScript: '/Users/dave/workspace_v7/FinBit_tagOS/FinBit_tagOS.cfg',
+        cfgScript: '/Users/dave/Documents/GitHub/FinBit_MSP432/FinBit_tagOS/FinBit_tagOS.cfg',
         profile: 'release',
         cfgHome: 'configPkg',
 });
@@ -41,7 +41,7 @@ else {
 
 var thisObj = {
     cfg:        '../FinBit_tagOS.cfg',
-    outputPath: '/Users/dave/workspace_v7/FinBit_tagOS/Debug/configPkg',
+    outputPath: '/Users/dave/Documents/GitHub/FinBit_MSP432/FinBit_tagOS/Debug/configPkg',
     exeName:    'FinBit_tagOS' + suffix,
     exeIntName: 'FinBit_tagOS' + suffix.replace('.', '_'),
     targ:       targ,

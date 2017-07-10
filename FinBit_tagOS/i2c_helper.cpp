@@ -53,8 +53,14 @@ int8_t readRegisterS8(I2C_Handle handle, uint8_t devAddr, uint8_t regAddr, int8_
     txBuffer[0] = regAddr;   //HB Addr
 
     if (!I2C_transfer(handle, &i2cTransaction)) {
+        GPIO_write(Board_LED1, Board_LED_OFF);
+        GPIO_write(Board_LED2, Board_LED_OFF);
+        GPIO_write(Board_LED3, Board_LED_OFF);
         GPIO_write(Board_LED1, Board_LED_ON);
-        System_abort("Bad I2C transfer!");
+        GPIO_toggle(Board_LED1);
+        System_printf("Bad I2C transfer - problem communicating with Board_ADDR %d!\n", devAddr);
+        System_flush();
+        System_abort("Bailing from i2c_helper.cpp readRegisterS8() function!\n");
     }
 
     return(*data);
@@ -79,8 +85,14 @@ uint8_t readRegisterU8(I2C_Handle handle, uint8_t devAddr, uint8_t regAddr, uint
     txBuffer[0] = regAddr;   //HB Addr
 
     if (!I2C_transfer(handle, &i2cTransaction)) {
+        GPIO_write(Board_LED1, Board_LED_OFF);
+        GPIO_write(Board_LED2, Board_LED_OFF);
+        GPIO_write(Board_LED3, Board_LED_OFF);
         GPIO_write(Board_LED1, Board_LED_ON);
-        System_abort("Bad I2C transfer!");
+        GPIO_toggle(Board_LED1);
+        System_printf("Bad I2C transfer - problem communicating with Board_ADDR %d!\n", devAddr);
+        System_flush();
+        System_abort("Bailing from i2c_helper.cpp readRegisterU8() function!\n");
     }
 
     return(*data);
@@ -105,8 +117,14 @@ void writeRegister8(I2C_Handle handle, uint8_t devAddr, uint8_t regAddr, uint8_t
     txBuffer[1] = value;   //   & 0xFF;
 
     if (!I2C_transfer(handle, &i2cTransaction)) {
+        GPIO_write(Board_LED1, Board_LED_OFF);
+        GPIO_write(Board_LED2, Board_LED_OFF);
+        GPIO_write(Board_LED3, Board_LED_OFF);
         GPIO_write(Board_LED1, Board_LED_ON);
-        System_abort("Bad I2C transfer!");
+        GPIO_toggle(Board_LED1);
+        System_printf("Bad I2C transfer - problem communicating with Board_ADDR %d!\n", devAddr);
+        System_flush();
+        System_abort("Bailing from i2c_helper.cpp writeRegister8() function!\n");
     }
 }
 
@@ -130,8 +148,14 @@ void writeRegister8R(I2C_Handle handle, uint8_t devAddr, uint8_t regAddr, uint8_
     rxBuffer[0] = readReg;
 
     if (!I2C_transfer(handle, &i2cTransaction)) {
+        GPIO_write(Board_LED1, Board_LED_OFF);
+        GPIO_write(Board_LED2, Board_LED_OFF);
+        GPIO_write(Board_LED3, Board_LED_OFF);
         GPIO_write(Board_LED1, Board_LED_ON);
-        System_abort("Bad I2C transfer!");
+        GPIO_toggle(Board_LED1);
+        System_printf("Bad I2C transfer - problem communicating with Board_ADDR %d!\n", devAddr);
+        System_flush();
+        System_abort("Bailing from i2c_helper.cpp writeRegister8R() function!\n");
     }
 }
 

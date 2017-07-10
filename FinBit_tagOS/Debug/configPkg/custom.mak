@@ -7,5 +7,5 @@
 #       or equal to the generated config header
 #
 linker.cmd: package/cfg/FinBit_tagOS_pem4f.xdl
-	$(SED) 's"^\"\(package/cfg/FinBit_tagOS_pem4fcfg.cmd\)\"$""\"/Users/dave/workspace_v7/FinBit_tagOS/Debug/configPkg/\1\""' package/cfg/FinBit_tagOS_pem4f.xdl > $@
+	$(SED) 's"^\"\(package/cfg/FinBit_tagOS_pem4fcfg.cmd\)\"$""\"/Users/dave/Documents/GitHub/FinBit_MSP432/FinBit_tagOS/Debug/configPkg/\1\""' package/cfg/FinBit_tagOS_pem4f.xdl > $@
 	-$(SETDATE) -r:max package/cfg/FinBit_tagOS_pem4f.h compiler.opt compiler.opt.defs

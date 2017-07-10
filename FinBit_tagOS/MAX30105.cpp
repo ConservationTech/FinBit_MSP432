@@ -170,7 +170,7 @@ static const uint8_t MAX_30105_EXPECTEDPARTID = 0x15;
 
 //The MAX30105 stores up to 32 samples on the IC
 //This is additional local storage to the microcontroller
-const int STORAGE_SIZE = 4; //Each long is 4 bytes so limit this to fit on your micro
+const int STORAGE_SIZE = 32; //Each long is 4 bytes so limit this to fit on your micro
 
 struct Record
 {
@@ -178,8 +178,8 @@ struct Record
   uint32_t red[STORAGE_SIZE];
   uint32_t nir[STORAGE_SIZE];
   uint32_t green[STORAGE_SIZE];
-  uint8_t head;
-  uint8_t tail;
+  uint16_t head;
+  uint16_t tail;
 } sense;                            // This is our circular buffer of readings from the sensor
 
 /* =================== MAX30105 CONSTRUCTOR MEMBER DEFINITIONS =================== */
@@ -575,7 +575,7 @@ bool MAX30105::safeCheck(I2C_Handle i2c, uint8_t maxTimeToCheck)    /* Highly mo
 //Tell caller how many samples are available
 uint8_t MAX30105::available(void)
 {
-  uint8_t numberOfSamples = sense.head - sense.tail;
+  uint16_t numberOfSamples = sense.head - sense.tail;
 
   if (numberOfSamples < 0) numberOfSamples += STORAGE_SIZE;
 
@@ -630,6 +630,17 @@ uint32_t MAX30105::getFIFOGreen(I2C_Handle i2c)
   return (sense.green[sense.tail]);
 }
 
+uint32_t MAX30105::getRedFIFOHead(void){
+    return (sense.red[sense.head]);
+}
+
+uint32_t MAX30105::getNirFIFOHead(void){
+    return(sense.nir[sense.head]);
+}
+
+uint32_t MAX30105::getGreenFIFOHead(void){
+    return(sense.green[sense.head]);
+}
 //Advance the tail
 void MAX30105::nextSample(void)
 {
@@ -654,7 +665,7 @@ uint16_t MAX30105::check(I2C_Handle i2c)
     //    tempLong[2] = 2;
 
     // Try this using a uint32_t pointer to tempLong
-    uint32_t* tempLong[3];
+    // uint32_t* tempLong[3];
 
     uint8_t readPointer = getReadPointer(i2c);
     uint8_t writePointer = getWritePointer(i2c);
@@ -720,19 +731,20 @@ uint16_t MAX30105::check(I2C_Handle i2c)
             // We call 'readFIFODATA(i2c, MAX30105_FIFODATA, activeLEDs * 3);' to accomplish this.
             // This function pushes each 18-bit red, nir, and/or green value from MAX3010's FIFODATA circular buffer
             // into the appropriate sense.LEDCOLOR[sense.head] (i.e.: the top of our sense circular buffer)
+
             readFIFODATA(i2c, MAX30105_FIFODATA, activeLEDs * 3);       // Return the 18-bit RED value from MAX3010's FIFODATA circular buffer to sense.red in readFIFODATA
 
-//            if (activeLEDs > 1)
-//            {
-//                readFIFODATA(i2c, MAX30105_FIFODATA, activeLEDs * 3);       // Return the 18-bit RED value from MAX3010's FIFODATA circular buffer to sense.red in readFIFODATA
-//
-//            }
-//
-//            if (activeLEDs > 2)
-//            {
-//                // Need to parse tempLong[1:3] and stuff into uint32_t sense.red, sense.nir, and sense.green
-//                readFIFODATA(i2c, MAX30105_FIFODATA, activeLEDs * 3);       // Return the 18-bit RED value from MAX3010's FIFODATA circular buffer to sense.red in readFIFODATA
-//            }
+            //            if (activeLEDs > 1)
+            //            {
+            //                readFIFODATA(i2c, MAX30105_FIFODATA, activeLEDs * 3);       // Return the 18-bit RED value from MAX3010's FIFODATA circular buffer to sense.red in readFIFODATA
+            //
+            //            }
+            //
+            //            if (activeLEDs > 2)
+            //            {
+            //                // Need to parse tempLong[1:3] and stuff into uint32_t sense.red, sense.nir, and sense.green
+            //                readFIFODATA(i2c, MAX30105_FIFODATA, activeLEDs * 3);       // Return the 18-bit RED value from MAX3010's FIFODATA circular buffer to sense.red in readFIFODATA
+            //            }
 
             toGet -= activeLEDs * 3;
           }
@@ -865,7 +877,7 @@ void MAX30105::readFIFODATA(I2C_Handle i2c, uint8_t regAddr, uint8_t numBytesToR
 
         if (numBytesToRead == 3) {
             // Read red from FIFO, pad 4th MSByte with 0x00 value
-            // Led value should become a 32-bit structured as 0x00_rxBuffer[2]_rxBuffer[1])_rxBuffer[0]
+            // Led value should become a 32-bit structured as 0x00_rxBuffer[0]_rxBuffer[1])_rxBuffer[2]
             // ledValues[0] << ( ( 0x00 ) | (rxBuffer[0] << 8) | (rxBuffer[1] << 16) | (rxBuffer[2] << 24) );
 
             ledValues[0] = zero;
@@ -875,9 +887,14 @@ void MAX30105::readFIFODATA(I2C_Handle i2c, uint8_t regAddr, uint8_t numBytesToR
 
             sense.red[sense.head] = ledValues[0];
 
-            // System_printf("FIFOREAD sub-section - rxBuffer[0] [1] [2] = %d %d %d\n", rxBuffer[0], rxBuffer[1], rxBuffer[2]);
-            // System_printf("FIFOREAD sub-section - ledValue[0] = %d\n", ledValues[0]);
-            // System_flush();
+            if (DEBUGPRINT) {
+                System_printf("FIFOREAD sub-section - rxBuffer[0] [1] [2] = %d %d %d\n", rxBuffer3[0], rxBuffer3[1], rxBuffer3[2] );
+                System_printf("FIFOREAD sub-section - ledValue[0] = %d\n", ledValues[0]);
+                System_printf("FIFOREAD sub-section - dump sense.tail | head | red: %d %d %d\n",
+                              sense.head, sense.tail, sense.red);
+                System_flush();
+            }
+
 
         } else if (numBytesToRead == 6) {
 
@@ -893,6 +910,16 @@ void MAX30105::readFIFODATA(I2C_Handle i2c, uint8_t regAddr, uint8_t numBytesToR
 
             sense.red[sense.head] = ledValues[0];
             sense.nir[sense.head] = ledValues[1];
+
+            if (DEBUGPRINT) {
+                System_printf("FIFOREAD sub-section - rxBuffer6[0] [1] [2] [3] [4] [5] = %d %d %d %d %d %d\n",
+                              rxBuffer6[0], rxBuffer6[1], rxBuffer6[2],
+                              rxBuffer6[3], rxBuffer6[4], rxBuffer6[5]);
+                System_printf("FIFOREAD sub-section - ledValue[0] [1] = %d %d\n", ledValues[0], ledValues[1]);
+                System_printf("FIFOREAD sub-section - dump sense.tail | head | red | nir: %d %d %d %d\n",
+                              sense.head, sense.tail, sense.red, sense.nir);
+                System_flush();
+            }
 
         } else if (numBytesToRead == 9) {
 
@@ -913,7 +940,17 @@ void MAX30105::readFIFODATA(I2C_Handle i2c, uint8_t regAddr, uint8_t numBytesToR
 
             sense.red[sense.head] = ledValues[0];
             sense.nir[sense.head] = ledValues[1];
-            sense.green[sense.head] = ledValues[1];
+            sense.green[sense.head] = ledValues[2];
+
+            if (DEBUGPRINT) {
+                System_printf("FIFOREAD sub-section - rxBuffer[0] [1] [2] [3] [4] [5] [6] [7] [8] = %d %d %d %d %d %d %d %d %d\n",
+                              rxBuffer9[0], rxBuffer9[1], rxBuffer9[2], rxBuffer9[3], rxBuffer9[4], rxBuffer9[5],
+                              rxBuffer9[6], rxBuffer9[7], rxBuffer9[8]);
+                System_printf("FIFOREAD sub-section - ledValue[0] [1] [2] = %d %d %d\n", ledValues[0], ledValues[1], ledValues[2]);
+                System_printf("FIFOREAD sub-section - dump sense.tail | head | red | nir | green: %d %d %d %d %d\n",
+                              sense.head, sense.tail, *sense.red, *sense.nir, *sense.green);
+                System_flush();
+            }
 
         } else {
             System_printf("This is a weird condition, where numBytesToRead != 3, 6 or 9. Ruh roh.\n");

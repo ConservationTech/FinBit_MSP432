@@ -7,7 +7,7 @@
         <srcFile name="package/cfg/FinBit_tagOS_pem4f.c"/>
     </sources>
     <configscripts>
-        <srcFile name="/Users/dave/workspace_v7/FinBit_tagOS/FinBit_tagOS.cfg"/>
+        <srcFile name="/Users/dave/Documents/GitHub/FinBit_MSP432/FinBit_tagOS/FinBit_tagOS.cfg"/>
     </configscripts>
     <makefiles>
         <srcFile name="package.mak" src="package.bld"/>
@@ -44,7 +44,7 @@
         isPartial="false"
         xCfgScript="package/cfg/FinBit_tagOS_pem4f.cfg"
         xCfgPrefix="package/cfg/FinBit_tagOS_pem4f"
-        cfgScript="/Users/dave/workspace_v7/FinBit_tagOS/FinBit_tagOS.cfg"
+        cfgScript="/Users/dave/Documents/GitHub/FinBit_MSP432/FinBit_tagOS/FinBit_tagOS.cfg"
         cfgArgs="null"
         />
     </configurations>
@@ -56,7 +56,7 @@
         profile="release"
         xCfgScript="package/cfg/FinBit_tagOS_pem4f.cfg"
         xCfgPrefix="package/cfg/FinBit_tagOS_pem4f"
-        cfgScript="/Users/dave/workspace_v7/FinBit_tagOS/FinBit_tagOS.cfg"
+        cfgScript="/Users/dave/Documents/GitHub/FinBit_MSP432/FinBit_tagOS/FinBit_tagOS.cfg"
         cfgArgs="null"
         />
     </executables>

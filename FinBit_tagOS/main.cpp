@@ -36,7 +36,7 @@
 #include "MAX30105.h"
 
 #define TASKSTACKSIZE       640
-#define DEBUGPRINT          false           // DEBUGPRINT = false
+#define DEBUGPRINT          true           // DEBUGPRINT = false
 
 // static const bool DEBUGPRINT = false;          // not working the way I want it to work...
 
@@ -102,7 +102,9 @@ Void taskFxn(UArg arg0, UArg arg1) {
                                                             // and added in Board.h around Line ____
 
         if (i2c == NULL) {
-            System_abort("Error Initializing I2C\n");
+            GPIO_write(Board_LED2, Board_LED_OFF);
+            GPIO_write(Board_LED1, Board_LED_ON);
+            System_abort("Error Initializing I2C from main.cpp. Check I2C wiring. Bailing on program execution for now.\n");
             System_flush();
         }
         else {
@@ -135,10 +137,10 @@ Void taskFxn(UArg arg0, UArg arg1) {
 
         particleSensor.wakeUp(i2c);
 
-        uint8_t ledBrightness = 128; //Options: 0=Off to 255=50mA
+        uint8_t ledBrightness = 255; //Options: 0=Off to 255=50mA
         uint8_t sampleAverage = 1; //Options: 1, 2, 4, 8, 16, 32
         uint8_t ledMode = 3; //Options: 1 = Red only, 2 = Red + IR, 3 = Red + IR + Green
-        uint16_t sampleRate = 200; //Options: 50, 100, 200, 400, 800, 1000, 1600, 3200
+        uint16_t sampleRate = 50; //Options: 50, 100, 200, 400, 800, 1000, 1600, 3200
         uint16_t pulseWidth = 411; //Options: 69, 118, 215, 411
         uint16_t adcRange = 16384; //Options: 2048, 4096, 8192, 16384
 
@@ -160,20 +162,35 @@ Void taskFxn(UArg arg0, UArg arg1) {
             }
         }
 
-        // Check aliveness of MPU-9250 sensor package
+        // Check aliveness of BNO055 sensor package
 
-        partID = readRegisterU8(i2c, Board_MPU9250_ADDR, 117, &partID, 1);
-        if (partID == 0x71) {
+        partID = readRegisterU8(i2c, Board_BNO055_ADDR, 0, &partID, 1);
+        if (partID == 0xA0) {
             if (DEBUGPRINT) {
-                System_printf("MPU-9250 PartID = %d. That's the expected WHOAMI value for this 9-DOF sensor!\n", partID);
+                System_printf("BNO055 PartID = %d. That's the expected WHOAMI value for this 9-DOF sensor!\n", partID);
                 System_flush();
             }
         } else {
             if (DEBUGPRINT) {
-                System_printf("PartID = %d. That's not the expected WHOAMI value for MPU-9250!\n", partID);
+                System_printf("PartID = %d. That's not the expected WHOAMI value for BNO055!\n", partID);
                 System_flush();
             }
         }
+
+        //        // Check aliveness of MPU-9250 sensor package
+        //
+        //        partID = readRegisterU8(i2c, Board_MPU9250_ADDR, 117, &partID, 1);
+        //        if (partID == 0x71) {
+        //            if (DEBUGPRINT) {
+        //                System_printf("MPU-9250 PartID = %d. That's the expected WHOAMI value for this 9-DOF sensor!\n", partID);
+        //                System_flush();
+        //            }
+        //        } else {
+        //            if (DEBUGPRINT) {
+        //                System_printf("PartID = %d. That's not the expected WHOAMI value for MPU-9250!\n", partID);
+        //                System_flush();
+        //            }
+        //        }
 
         // Check aliveness of MCP9808 sensor package
 
@@ -200,8 +217,10 @@ Void taskFxn(UArg arg0, UArg arg1) {
             System_flush();
         }
 
-        for (iterate = 1; iterate <= 10; iterate++) {
-            System_printf("Iteration: %d | Green: %d | Red: %d | NIR: %d | ", iterate, particleSensor.getGreen(i2c), particleSensor.getRed(i2c), particleSensor.getIR(i2c) );
+        for (iterate = 1; iterate <= 20; iterate++) {
+            if (particleSensor.safeCheck(i2c, 100)){
+                System_printf("Iteration: %d | Green: %d | Red: %d | NIR: %d | ", iterate, particleSensor.getGreenFIFOHead(), particleSensor.getRedFIFOHead(), particleSensor.getNirFIFOHead() );
+            }
             System_printf("TempC = %f°C or %f°F |\n", particleSensor.readTemperature(i2c), particleSensor.readTemperatureF(i2c));
             System_flush();
         }

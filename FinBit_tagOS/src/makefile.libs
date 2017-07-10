@@ -1,6 +1,6 @@
 #
 # This file was generated based on the configuration script:
-#     /Users/dave/workspace_v7/FinBit_tagOS/FinBit_tagOS.cfg
+#     /Users/dave/Documents/GitHub/FinBit_MSP432/FinBit_tagOS/FinBit_tagOS.cfg
 #
 # This makefile may be included in other makefiles that need to build
 # the libraries containing the compiled source files generated as
@@ -14,7 +14,7 @@
 #
 # The absolute path to the generated source directory (at the time the
 # sources were generated) is:
-#    /Users/dave/workspace_v7/FinBit_tagOS/src
+#    /Users/dave/Documents/GitHub/FinBit_MSP432/FinBit_tagOS/src
 #
 GEN_SRC_DIR ?= ../src
 

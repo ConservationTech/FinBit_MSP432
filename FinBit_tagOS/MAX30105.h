@@ -97,6 +97,9 @@ class MAX30105 {
         uint32_t getFIFORed(I2C_Handle i2c); //Returns the FIFO sample pointed to by tail
         uint32_t getFIFOIR(I2C_Handle i2c); //Returns the FIFO sample pointed to by tail
         uint32_t getFIFOGreen(I2C_Handle i2c); //Returns the FIFO sample pointed to by tail
+        uint32_t getRedFIFOHead(); //Returns red from FIFO sample head
+        uint32_t getNirFIFOHead(); //Returns nir from FIFO sample head
+        uint32_t getGreenFIFOHead(); //Returns green from FIFO sample head
 
         uint8_t getWritePointer(I2C_Handle i2c);
         uint8_t getReadPointer(I2C_Handle i2c);
