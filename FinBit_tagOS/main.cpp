@@ -35,6 +35,9 @@
 /* Include the MAX30105 header file */
 #include "MAX30105.h"
 
+/* Include the MAX30105 header file */
+#include "MCP9808.h"
+
 #define TASKSTACKSIZE       640
 #define DEBUGPRINT          true           // DEBUGPRINT = false
 
@@ -76,11 +79,13 @@ void msIdle(uint8_t millisecondsToIdle){
 
 Void taskFxn(UArg arg0, UArg arg1) {
 
-    MAX30105 particleSensor;
+    MAX30105    particleSensor;
+    MCP9808     tempSensor;
 
     uint8_t         partID;
     uint8_t         iterate;                       // hide this iterator counter unless needed
-    bool            useMAX30105Class = 1;
+    bool            useMAX30105Class = true, useMCP9808Class = true;
+
 
     if (useMAX30105Class) {
 
@@ -148,19 +153,19 @@ Void taskFxn(UArg arg0, UArg arg1) {
 
         // Check aliveness of MPL3115A2 sensor package
 
-        partID = readRegisterU8(i2c, Board_MPL3115A2_ADDR, 12, &partID, 1);
-
-        if (partID == 0xC4) {
-            if (DEBUGPRINT) {
-                System_printf("MPL-3115A2 PartID = %d. That's the expected WHOAMI value for this pressure sensor.!\n", partID);
-                System_flush();
-            }
-        } else {
-            if (DEBUGPRINT) {
-                System_printf("PartID = %d. That's not the expected WHOAMI value for MPL-31115A2!\n", partID);
-                System_flush();
-            }
-        }
+//        partID = readRegisterU8(i2c, Board_MPL3115A2_ADDR, 12, &partID, 1);
+//
+//        if (partID == 0xC4) {
+//            if (DEBUGPRINT) {
+//                System_printf("MPL-3115A2 PartID = %d. That's the expected WHOAMI value for this pressure sensor.!\n", partID);
+//                System_flush();
+//            }
+//        } else {
+//            if (DEBUGPRINT) {
+//                System_printf("PartID = %d. That's not the expected WHOAMI value for MPL-31115A2!\n", partID);
+//                System_flush();
+//            }
+//        }
 
         // Check aliveness of BNO055 sensor package
 
@@ -170,6 +175,13 @@ Void taskFxn(UArg arg0, UArg arg1) {
                 System_printf("BNO055 PartID = %d. That's the expected WHOAMI value for this 9-DOF sensor!\n", partID);
                 System_flush();
             }
+
+            // Run BNO055 system status and/or power-on self test routines
+
+            uint8_t statusID = readRegisterU8(i2c, Board_BNO055_ADDR, 0x39, &statusID, 1);
+            System_printf("\tBNO055 status = %d\n", statusID);
+            System_flush();
+
         } else {
             if (DEBUGPRINT) {
                 System_printf("PartID = %d. That's not the expected WHOAMI value for BNO055!\n", partID);
@@ -221,7 +233,10 @@ Void taskFxn(UArg arg0, UArg arg1) {
             if (particleSensor.safeCheck(i2c, 100)){
                 System_printf("Iteration: %d | Green: %d | Red: %d | NIR: %d | ", iterate, particleSensor.getGreenFIFOHead(), particleSensor.getRedFIFOHead(), particleSensor.getNirFIFOHead() );
             }
-            System_printf("TempC = %f°C or %f°F |\n", particleSensor.readTemperature(i2c), particleSensor.readTemperatureF(i2c));
+            System_printf("TempC = %f°C or %f°F | ", particleSensor.readTemperature(i2c), particleSensor.readTemperatureF(i2c));
+
+            System_printf("MCP9808 Temp = %f°C\n", tempSensor.readTempC(i2c) );
+
             System_flush();
         }
 

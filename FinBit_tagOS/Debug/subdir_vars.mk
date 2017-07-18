@@ -8,6 +8,7 @@ CFG_SRCS += \
 
 CPP_SRCS += \
 ../MAX30105.cpp \
+../MCP9808.cpp \
 ../i2c_helper.cpp \
 ../main.cpp \
 ../system_clock.cpp 
@@ -36,6 +37,7 @@ GEN_OPTS += \
 
 OBJS += \
 ./MAX30105.obj \
+./MCP9808.obj \
 ./MSP_EXP432P401R.obj \
 ./i2c_helper.obj \
 ./main.obj \
@@ -43,6 +45,7 @@ OBJS += \
 
 CPP_DEPS += \
 ./MAX30105.d \
+./MCP9808.d \
 ./i2c_helper.d \
 ./main.d \
 ./system_clock.d 
@@ -52,6 +55,7 @@ GEN_MISC_DIRS__QUOTED += \
 
 OBJS__QUOTED += \
 "MAX30105.obj" \
+"MCP9808.obj" \
 "MSP_EXP432P401R.obj" \
 "i2c_helper.obj" \
 "main.obj" \
@@ -62,6 +66,7 @@ C_DEPS__QUOTED += \
 
 CPP_DEPS__QUOTED += \
 "MAX30105.d" \
+"MCP9808.d" \
 "i2c_helper.d" \
 "main.d" \
 "system_clock.d" 
@@ -72,6 +77,7 @@ GEN_FILES__QUOTED += \
 
 CPP_SRCS__QUOTED += \
 "../MAX30105.cpp" \
+"../MCP9808.cpp" \
 "../i2c_helper.cpp" \
 "../main.cpp" \
 "../system_clock.cpp" 

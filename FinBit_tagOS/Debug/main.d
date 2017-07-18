@@ -190,6 +190,13 @@ main.obj: ../system_clock.h
 main.obj: ../Board.h
 main.obj: ../MSP_EXP432P401R.h
 main.obj: ../MAX30105.h
+main.obj: ../MCP9808.h
+main.obj: /Users/dave/ti/xdctools_3_32_00_06_core/packages/xdc/runtime/Diags.h
+main.obj: /Users/dave/ti/xdctools_3_32_00_06_core/packages/xdc/runtime/System.h
+main.obj: /Users/dave/ti/tirtos_msp43x_2_20_00_06/products/bios_6_46_00_23/packages/ti/sysbios/BIOS.h
+main.obj: /Users/dave/ti/tirtos_msp43x_2_20_00_06/products/bios_6_46_00_23/packages/ti/sysbios/knl/Semaphore.h
+main.obj: /Users/dave/ti/tirtos_msp43x_2_20_00_06/products/bios_6_46_00_23/packages/ti/sysbios/knl/Task.h
+main.obj: /Users/dave/ti/tirtos_msp43x_2_20_00_06/products/bios_6_46_00_23/packages/ti/sysbios/knl/Clock.h
 
 ../main.cpp: 
 /Users/dave/ti/xdctools_3_32_00_06_core/packages/xdc/runtime/System.h: 
@@ -381,3 +388,10 @@ main.obj: ../MAX30105.h
 ../Board.h: 
 ../MSP_EXP432P401R.h: 
 ../MAX30105.h: 
+../MCP9808.h: 
+/Users/dave/ti/xdctools_3_32_00_06_core/packages/xdc/runtime/Diags.h: 
+/Users/dave/ti/xdctools_3_32_00_06_core/packages/xdc/runtime/System.h: 
+/Users/dave/ti/tirtos_msp43x_2_20_00_06/products/bios_6_46_00_23/packages/ti/sysbios/BIOS.h: 
+/Users/dave/ti/tirtos_msp43x_2_20_00_06/products/bios_6_46_00_23/packages/ti/sysbios/knl/Semaphore.h: 
+/Users/dave/ti/tirtos_msp43x_2_20_00_06/products/bios_6_46_00_23/packages/ti/sysbios/knl/Task.h: 
+/Users/dave/ti/tirtos_msp43x_2_20_00_06/products/bios_6_46_00_23/packages/ti/sysbios/knl/Clock.h: 

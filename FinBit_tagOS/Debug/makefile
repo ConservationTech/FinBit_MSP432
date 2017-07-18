@@ -9,6 +9,7 @@ GEN_CMDS__FLAG := -l"configPkg/linker.cmd"
 
 ORDERED_OBJS += \
 "./MAX30105.obj" \
+"./MCP9808.obj" \
 "./MSP_EXP432P401R.obj" \
 "./i2c_helper.obj" \
 "./main.obj" \
@@ -157,9 +158,9 @@ FinBit_tagOS.hex: $(EXE_OUTPUTS)
 clean:
 	-$(RM) $(GEN_CMDS__QUOTED)$(GEN_MISC_FILES__QUOTED)$(BIN_OUTPUTS__QUOTED)$(GEN_FILES__QUOTED)$(EXE_OUTPUTS__QUOTED)$(GEN_OPTS__QUOTED)
 	-$(RMDIR) $(GEN_MISC_DIRS__QUOTED)
-	-$(RM) "MAX30105.obj" "MSP_EXP432P401R.obj" "i2c_helper.obj" "main.obj" "system_clock.obj" 
+	-$(RM) "MAX30105.obj" "MCP9808.obj" "MSP_EXP432P401R.obj" "i2c_helper.obj" "main.obj" "system_clock.obj" 
 	-$(RM) "MSP_EXP432P401R.d" 
-	-$(RM) "MAX30105.d" "i2c_helper.d" "main.d" "system_clock.d" 
+	-$(RM) "MAX30105.d" "MCP9808.d" "i2c_helper.d" "main.d" "system_clock.d" 
 	-@echo 'Finished clean'
 	-@echo ' '
 

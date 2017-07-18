@@ -877,7 +877,7 @@ void MAX30105::readFIFODATA(I2C_Handle i2c, uint8_t regAddr, uint8_t numBytesToR
 
         if (numBytesToRead == 3) {
             // Read red from FIFO, pad 4th MSByte with 0x00 value
-            // Led value should become a 32-bit structured as 0x00_rxBuffer[0]_rxBuffer[1])_rxBuffer[2]
+            // Led value should become a 32-bit value, structured as 0x00_rxBuffer[0]_rxBuffer[1])_rxBuffer[2]
             // ledValues[0] << ( ( 0x00 ) | (rxBuffer[0] << 8) | (rxBuffer[1] << 16) | (rxBuffer[2] << 24) );
 
             ledValues[0] = zero;
