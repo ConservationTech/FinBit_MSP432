@@ -1,19 +1,16 @@
- /* 
+ /*
  *    MAX30105 over i2c by Dave Haas - created on 17 June 2017
  *    Based an i2c example from TI for MSP432 LaunchPad.
  *    Code to address the MAX30105 module was copied from
- *    MAX30105.h and MAX30105.cpp by Peter Jansen and Nathan Seidle (SparkFun). 
+ *    MAX30105.h and MAX30105.cpp by Peter Jansen and Nathan Seidle (SparkFun).
  *    This code and all code for MAX30105 are governed under the
  *    BSD license, so all text above must be included in any redistribution.
  */
 
- /*    ======== i2c_MAX30105.c
- */
-
 /* XDCtools Header files */
 #include <xdc/runtime/System.h>
-#include <xdc/std.h>
 #include <xdc/runtime/Diags.h>
+#include <xdc/std.h>
 
 /* BIOS Header files */
 #include <ti/sysbios/BIOS.h>
@@ -22,6 +19,13 @@
 #include <ti/sysbios/knl/Clock.h>
 #include <ti/drivers/GPIO.h>
 #include <ti/drivers/I2C.h>
+#include <ti/drivers/SDSPI.h>
+
+/* Standard Library for handling file i/o, concatentation, etc */
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <stdbool.h>
 
 /* Include the generic I2C helper function prototypes */
 #include "i2c_helper.h"
@@ -35,34 +39,84 @@
 /* Include the MAX30105 header file */
 #include "MAX30105.h"
 
-/* Include the MAX30105 header file */
+/* Include the MCP9808 header file */
 #include "MCP9808.h"
 
-#define TASKSTACKSIZE       640
-#define DEBUGPRINT          true           // DEBUGPRINT = false
+/* Include the MS5803 header file */
+// #include "MS5803.h"
 
-// static const bool DEBUGPRINT = false;          // not working the way I want it to work...
+/* Buffer size used for the file copy process */
+#define FATSD_BUFF_SIZE       2048
+
+
+/* String conversion macro */
+#define STR_(n)             #n
+#define STR(n)              STR_(n)
+
+/* Drive number used for FatFs */
+#define DRIVE_NUM           0
+
+/* Enable debug printing for MSP432 LaunchKit module development */
+
+#define DEBUGPRINT          false
+#define POSTPRINT           true
+
+#define TASKSTACKSIZE       6142         // Default was 640 | fatsd was 768 | now testing 4096 and 6142
+
+/* Add some defines for specific MSP432 interfaces; use conditional coding to initialize these */
+
+#define USE_I2C             true
+#define USE_SPI             true
+#define USE_PWM             false
+//
+///* Add some defines for the specific modules; use conditional coding to use defined sensors */
+#define USE_MAX30105        true
+#define USE_MCP9808         true
+#define USE_MPU9250         true
+#define USE_SDSPI           true
+#define USE_CC31XXWIFI      true
+#define USE_SPIFLASH        false
+#define USE_ADS1298         false
+#define USE_BNO055          false
+#define USE_MS580314BA      false
+#define USE_KELLERPA7S      false
+#define USE_MCL3115A2       false
+#define USE_LIPOGAUGE       false
 
 void clockIdle(void);
 
-Task_Struct task0Struct, task1Struct, task2Struct;          // Added task1Struct and task2Struct after bigtime.cpp integration
+Task_Struct task0Struct, task1Struct, task2Struct;      // Added task1Struct &task2Struct for clocks
 Char task0Stack[TASKSTACKSIZE], task1Stack[TASKSTACKSIZE], task2Stack[TASKSTACKSIZE];
+
 Semaphore_Struct sem0Struct, sem1Struct;
 Semaphore_Handle sem0Handle, sem1Handle;
 Clock_Struct clk0Struct, clk1Struct;
 
-// Task_Struct task0Struct, task1Struct;                    // Commented out, since added above
-// Char task0Stack[TASKSTACKSIZE], task1Stack[TASKSTACKSIZE];  // Commented out, since added above
-
-///* Global clock objects */
+/* Global clock objects */
 Clock cl0(0);  /* idle loop clock */
-Clock cl1(1);  /* periodic clock, period = 1 ms */
-Clock cl2(2);  /* periodic clock, period = 1 sec */
+Clock cl1(1);  /* periodic clock, period = 5 ms or 200 Hz */
+Clock cl2(2);  /* periodic clock, period = 1 min */
 Clock cl3(3);  /* task clock */
 Clock cl4(4);  /* task clock */
 
-void clockIdle(void)
-{
+// const char fileName[]     = "fat:"STR(DRIVE_NUM)":tagOS1.bin";
+
+const uint8_t structSize = 128;
+
+struct fatsdWriteBuffer {
+    // uint32_t iteration[structSize];
+    uint32_t red[structSize];
+    uint32_t nir[structSize];
+    float dieTempC[structSize];
+    float ambientTempC[structSize];
+} writeBuffer, readBuffer;
+
+struct Date {
+    uint8_t century, year, month, day, hour, minute, second;
+} timeStamp;
+
+
+void clockIdle(void) {
     cl0.tick();
     System_flush();
     return;
@@ -76,185 +130,506 @@ void msIdle(uint8_t millisecondsToIdle){
     return;
 }
 
-
 Void taskFxn(UArg arg0, UArg arg1) {
 
-    MAX30105    particleSensor;
-    MCP9808     tempSensor;
+    /* Instantiate classes for main task function */
+    MAX30105        particleSensor;
+    MCP9808         tempSensor;
 
-    uint8_t         partID;
-    uint8_t         iterate;                       // hide this iterator counter unless needed
-    bool            useMAX30105Class = true, useMCP9808Class = true;
+    System_printf("*** tagOS v0.1a ***\n");
+    System_flush();
 
+    /* Populate the main task's timeStamp structure */
 
-    if (useMAX30105Class) {
+    timeStamp.century   = cl2.getCentury();
+    timeStamp.year      = cl2.getYear();
+    timeStamp.month     = cl2.getMonth();
+    timeStamp.day       = cl2.getDay();
+    timeStamp.hour      = cl2.getHour();
+    timeStamp.minute    = cl2.getMinute();
+    timeStamp.second    = cl2.getSecond();
 
-        if (DEBUGPRINT) {
-            System_printf("Initializing the I2C bus...\n");
-            System_flush();
-        }
-
-
-        I2C_Handle      i2c;
-        I2C_Params      i2cParams;
-        I2C_Params_init(&i2cParams);                        // Create I2C for usage
-        i2cParams.bitRate = I2C_400kHz;                     // Change from default 100kHz to 400kHz
-        // i2c = I2C_open(Board_I2C_B0P16P17, &i2cParams);     // Board_I2C_B0P16P17 -> MSP432's Pins 1.7 and 1.6 by default = UCB0SDA and UCB0SCL
-
-        i2c = I2C_open(Board_I2C1, &i2cParams);              // Try using UCB1SDA and UCB1SCL on Pins 6.5 and 6.4
-                                                            // Added in MSP_EXP432P401R.c, line ___
-                                                            // and added in MSP_EXP432P401R.h around Line 91
-                                                            // and added in Board.h around Line ____
-
-        if (i2c == NULL) {
-            GPIO_write(Board_LED2, Board_LED_OFF);
-            GPIO_write(Board_LED1, Board_LED_ON);
-            System_abort("Error Initializing I2C from main.cpp. Check I2C wiring. Bailing on program execution for now.\n");
-            System_flush();
-        }
-        else {
-            // readRegisterU8(i2c, MAX30105_PARTID, &readBufferU8, 1);
-            // partID = readBufferU8;
-            partID = 99;
-            partID = particleSensor.readPartID(i2c);
-            if (partID == 0x15) {
-                if (DEBUGPRINT) {
-                    System_printf("Successful I2C handshake with MAX30105 as an I2C slave device.\n");
-                    System_flush();
-                }
-
-            } else {
-                if (DEBUGPRINT) {
-                    System_printf("PartID = %d. ", partID);
-                    System_abort("That's not the MAX30105 you're talking to... Probably better to bail and sort this out!\n");
-                    System_flush();
-                }
-            }
-
-        }
-
-        particleSensor.begin(i2c);
-
-        if (DEBUGPRINT) {
-            System_printf("PartID = %d using call to MAX30105::readPartID.\n", partID);
-            System_flush();
-        }
-
-        particleSensor.wakeUp(i2c);
-
-        uint8_t ledBrightness = 255; //Options: 0=Off to 255=50mA
-        uint8_t sampleAverage = 1; //Options: 1, 2, 4, 8, 16, 32
-        uint8_t ledMode = 3; //Options: 1 = Red only, 2 = Red + IR, 3 = Red + IR + Green
-        uint16_t sampleRate = 50; //Options: 50, 100, 200, 400, 800, 1000, 1600, 3200
-        uint16_t pulseWidth = 411; //Options: 69, 118, 215, 411
-        uint16_t adcRange = 16384; //Options: 2048, 4096, 8192, 16384
-
-        particleSensor.setup(i2c, ledBrightness, sampleAverage, ledMode, sampleRate, pulseWidth, adcRange); //Configure sensor with these settings
-
-        // Check aliveness of MPL3115A2 sensor package
-
-//        partID = readRegisterU8(i2c, Board_MPL3115A2_ADDR, 12, &partID, 1);
-//
-//        if (partID == 0xC4) {
-//            if (DEBUGPRINT) {
-//                System_printf("MPL-3115A2 PartID = %d. That's the expected WHOAMI value for this pressure sensor.!\n", partID);
-//                System_flush();
-//            }
-//        } else {
-//            if (DEBUGPRINT) {
-//                System_printf("PartID = %d. That's not the expected WHOAMI value for MPL-31115A2!\n", partID);
-//                System_flush();
-//            }
-//        }
-
-        // Check aliveness of BNO055 sensor package
-
-        partID = readRegisterU8(i2c, Board_BNO055_ADDR, 0, &partID, 1);
-        if (partID == 0xA0) {
-            if (DEBUGPRINT) {
-                System_printf("BNO055 PartID = %d. That's the expected WHOAMI value for this 9-DOF sensor!\n", partID);
-                System_flush();
-            }
-
-            // Run BNO055 system status and/or power-on self test routines
-
-            uint8_t statusID = readRegisterU8(i2c, Board_BNO055_ADDR, 0x39, &statusID, 1);
-            System_printf("\tBNO055 status = %d\n", statusID);
-            System_flush();
-
-        } else {
-            if (DEBUGPRINT) {
-                System_printf("PartID = %d. That's not the expected WHOAMI value for BNO055!\n", partID);
-                System_flush();
-            }
-        }
-
-        //        // Check aliveness of MPU-9250 sensor package
-        //
-        //        partID = readRegisterU8(i2c, Board_MPU9250_ADDR, 117, &partID, 1);
-        //        if (partID == 0x71) {
-        //            if (DEBUGPRINT) {
-        //                System_printf("MPU-9250 PartID = %d. That's the expected WHOAMI value for this 9-DOF sensor!\n", partID);
-        //                System_flush();
-        //            }
-        //        } else {
-        //            if (DEBUGPRINT) {
-        //                System_printf("PartID = %d. That's not the expected WHOAMI value for MPU-9250!\n", partID);
-        //                System_flush();
-        //            }
-        //        }
-
-        // Check aliveness of MCP9808 sensor package
-
-        partID = readRegisterU8(i2c, Board_MCP9808_ADDR, 0x07, &partID, 1);
-        if (partID == 0x04) {
-            if (DEBUGPRINT) {
-                System_printf("MCP9808 PartID = %d. That's the expected WHOAMI value for this temperature sensor!\n", partID);
-                System_flush();
-            }
-        } else {
-            if (DEBUGPRINT) {
-                System_printf("PartID = %d. That's not the expected WHOAMI value for MCP9808!\n", partID);
-                System_flush();
-            }
-        }
-
-        // Now try to grab some pulse ox data...
-
-        uint8_t tempReadPtr = particleSensor.getReadPointer(i2c);
-        uint8_t tempWritePtr = particleSensor.getWritePointer(i2c);
-        if (DEBUGPRINT) {
-            System_printf("Inspecting MAX30105 read pointer: %d\n", tempReadPtr);
-            System_printf("Inspecting MAX30105 write pointer: %d\n", tempWritePtr);
-            System_flush();
-        }
-
-        for (iterate = 1; iterate <= 20; iterate++) {
-            if (particleSensor.safeCheck(i2c, 100)){
-                System_printf("Iteration: %d | Green: %d | Red: %d | NIR: %d | ", iterate, particleSensor.getGreenFIFOHead(), particleSensor.getRedFIFOHead(), particleSensor.getNirFIFOHead() );
-            }
-            System_printf("TempC = %f°C or %f°F | ", particleSensor.readTemperature(i2c), particleSensor.readTemperatureF(i2c));
-
-            System_printf("MCP9808 Temp = %f°C\n", tempSensor.readTempC(i2c) );
-
-            System_flush();
-        }
-
-        particleSensor.shutDown(i2c);
+    System_printf("\tRecord start = %d%d-%.2d-%.2d %.2d:%.2d:%.2d\n", timeStamp.century, timeStamp.year,
+                  timeStamp.month, timeStamp.day, timeStamp.hour, timeStamp.minute, timeStamp.second);
+    System_flush();
 
 
-        // Close I2C Bus
+    /* Initialize SDSPI -- this enables SD card operations over SPI */
 
-        I2C_close(i2c);
-        System_printf("I2C closed!\n");
-        System_flush();
+    SDSPI_Handle    sdspiHandle;
+    SDSPI_Params    sdspiParams;
 
+    /* Variables for the CIO functions */
+    FILE *src, *dst;
+
+    /* Variables to keep track of the file copy progress */
+    unsigned int bytesRead = 0;
+    unsigned int bytesWritten = 0;
+    unsigned int fileSizeMultiplier = 0;
+
+    /* Mount and register the SD Card */
+    SDSPI_Params_init(&sdspiParams);
+    sdspiHandle = SDSPI_open(Board_SDSPI0, DRIVE_NUM, &sdspiParams);
+
+    if (sdspiHandle == NULL) {
+        System_abort("\tError initializing the SD card over SPI.\n");
     } else {
-
-        System_printf("This path is deprecated. Quitting!\n");
+        System_printf("\tDrive %u is mounted using SD over SPI.\n", DRIVE_NUM);
         System_flush();
+    }
+
+    /* Initialize I2C -- this enables I2C for use with I2C-based sensor packages */
+
+    if (DEBUGPRINT) {
+        System_printf("\tInitializing the I2C bus...\n");
+        System_flush();
+    }
+
+    I2C_Handle      i2c;
+    I2C_Params      i2cParams;
+    I2C_Params_init(&i2cParams);                        // Create I2C for usage
+    i2cParams.bitRate = I2C_400kHz;                     // Change from default 100kHz to 400kHz
+
+    /* Use UCB1SDA and UCB1SCL on Pins 6.5 and 6.4 | MSP_EXP432P401R.c, line ___ | MSP_EXP432P401R.h, line 91 | Board., Line ____ */
+    // i2c = I2C_open(Board_I2C_B0P16P17, &i2cParams);     // Board_I2C_B0P16P17 -> MSP432's Pins 1.7 and 1.6 by default = UCB0SDA and UCB0SCL
+    i2c = I2C_open(Board_I2C1, &i2cParams);
+
+    if (i2c == NULL) {
+        GPIO_write(Board_LED2, Board_LED_OFF);
+        GPIO_write(Board_LED1, Board_LED_ON);
+        System_abort("\tError Initializing I2C from main.cpp. Check I2C wiring. Bailing on program execution for now.\n");
+        System_flush();
+    } else {
+        System_printf("\tI2C bus successfully initialized.\n");
+        System_flush();
+    }
+
+    /* Run sensor aliveness checks - now functionalized in i2c_helper.cpp */
+    uint8_t badSensorCount = runSensorChecks(i2c);
+    if (badSensorCount == 0){
+        System_printf("All I2C sensors presented and accounted for!\n");
+        System_flush();
+    } else {
+        System_printf("At least %d I2C sensor(s) is/are not responding to I2C WHOAMI request(s).\n",
+                      badSensorCount);
+        System_abort("Enable debugging, fire up the o'scope, and investigate. Bailing!\n");
+        System_flush();
+    }
+
+    System_printf("\nPreparing sensors and non-volatile memory for sampling phase...\n");
+    System_flush();
+
+    /* Initialize the MAX30105 module */
+    particleSensor.softReset(i2c);
+    Task_sleep(5);
+    particleSensor.begin(i2c);
+
+    particleSensor.wakeUp(i2c);
+
+    uint8_t ledBrightness = 128; //Options: 0=Off to 255=50mA
+    uint8_t sampleAverage = 1; //Options: 1, 2, 4, 8, 16, 32
+    uint8_t ledMode = 2; //Options: 1 = Red only, 2 = Red + IR, 3 = Red + IR + Green
+    uint16_t sampleRate = 200; //Options: 50, 100, 200, 400, 800, 1000, 1600, 3200 -- here 200, which performs 100Hz sampling on red and nir
+    uint16_t pulseWidth = 411; //Options: 69, 118, 215, 411
+    uint16_t adcRange = 16384; //Options: 2048, 4096, 8192, 16384
+
+    particleSensor.setup(i2c, ledBrightness, sampleAverage, ledMode, sampleRate,
+                         pulseWidth, adcRange); //Configure sensor with these settings
+
+    /*
+    //      Grab some pulse ox, temperature, and other sensor data...
+    */
+
+    /* Create a new file object for the file write */
+
+    /* Create this tagOS session's dynamic file name from date and time */
+
+    // char tempFileName[30];                                                       // max file size including final NULL
+    // sprintf(tempFileName, "fat:%d:tagOS_%d%d%.2d%.2d_%.2d%.2d.bin\0",
+    //            DRIVE_NUM, timeStamp.century, timeStamp.year, timeStamp.month,
+    //            timeStamp.day, timeStamp.hour, timeStamp.minute);
+    // const char* constFileName = tempFileName;                                    // if this gives f'd up results, switch to next line
+
+    const char* constFileName = "fat:0:tagOS1.bin\0";                               // if above line fails, switch to this one and be done with it!
+
+    dst = fopen(constFileName, "w+");
+    if (!dst) {
+        /* If file doesn't exist, create it and start writing */
+        System_printf("\tAttempting to create fileName: %s\n", constFileName);
+                System_flush();
+        dst = fopen(constFileName, "w+");
+        if (!dst) {
+            System_abort("\tFile creation failed! Probably best to bail and sort out now.\n");
+        } else {
+            System_printf("\tFile created and ready for write!\n");
+            System_flush();
+        }
+    }
+    else {
+        // This condition probably shouldn't happen with fopen "w+" fopen above. "w+" = create and overwrite. But catch it anyway...
+        System_printf("\t*** File '%s' is already present. It should've been created from scratch, but is being reopened instead. Investigate! ***\n", constFileName);
+        System_flush();
+    }
+
+    /* START SAMPLING LOOP HERE */
+
+    System_printf("\nStarting sampling now.\n");
+    System_flush();
+
+    /* Do some number of iterations to gather some sample data */
+
+    uint16_t writeBufferPointer = 0;
+    uint32_t writeBufferSize    = 0;
+    uint32_t testTimer          = 0;
+    uint32_t totalBytesWritten  = 0;
+
+    uint32_t sampleTime         = 1;                                        // Define sample time in minutes
+    uint32_t sampleDuration     = sampleTime * 60 * 1000;                   // Redefine minutes as milliseconds and call it 'sampleDuration'
+
+    while (testTimer < sampleDuration) {                                    // Sample for 'sampleDuration milliseconds, e.g.: 1000 = 1000 ms = 1 second
+
+        cl1.tick();                                                         // Do a cl1.tick(), which should be every 10 milliseconds
+        testTimer += 1;                                                     // Increment a tick accumulator with every clock tick
+
+        // TO-DO: add a sampling delay timer to allow sensor ADCs to settle
+
+        if ( !(testTimer % 5) )                                             // When millisecond count is divisible by 5, or 200Hz (1000 / 5 = 200)
+        {
+
+//            System_printf("testTimer = %d\n", testTimer);
+//            System_flush();
+
+            uint32_t    thisGreen, thisRed, thisNir;
+            // uint32_t     pressure, pTemp, aX, aY, aZ, mX, mY, mZ, gX, gY, gZ;
+            float       dieTempC, ambientTempC;
+
+            /* 1. Grab pulse ox, temp, and any other sensor data */
+
+            if (particleSensor.safeCheck(i2c, 100)){
+
+                if (ledMode == 3)
+                    thisGreen   = particleSensor.getGreenFIFOHead();
+                    // thisGreen   = particleSensor.getGreen(i2c);
+
+                thisRed     = particleSensor.getRedFIFOHead();
+                // thisRed     = particleSensor.getRed(i2c);
+                thisNir     = particleSensor.getNirFIFOHead();
+                //thisNir     = particleSensor.getIR(i2c);
+                dieTempC    = particleSensor.readTemperature(i2c);
+
+                /* Grab ambient temperature data */
+                ambientTempC    = tempSensor.readTempC(i2c);
+
+                /* Get pressure and pressure transducer temp */
+                /* TO-DO: write the MS5803-14BA and Keller I2C drivers */
+                // pressure    = pressureSensor.readPressure(i2c);
+                // pTemp       = pressureSensor.readTemp(i2c);
+                /* Do pressure w/ pTemp calibration and write compensated, either here or post-collection (during read -> wi-fi transfer -- probably best) */
+
+                /* Get 9-DOF sensor data */
+                /* TO-DO: pass in 9-DOF data; write the MPU-9250 driver */
+
+            }
+
+//            System_printf("\t1. Data sampled.\n");
+//            System_flush();
+
+            /* Some steps for buffering data and writing it to sd card                                  */
+            /* Recall defined FATSD_BUFF_SIZE, which for large SD cards we'll assume is 2k write blocks */
+
+            /* 2. Calculate the total size of the above data reads = currentDataSizing (should all be a constant 4 bytes in size) */
+            uint8_t sizeThisRed         = sizeof(thisRed);
+            uint8_t sizeThisNir         = sizeof(thisNir);
+            uint8_t sizeDieTempC        = sizeof(dieTempC);
+            uint8_t sizeAmbientTempC    = sizeof(ambientTempC);
+//            uint8_t sizePressure        = sizeof(pressure);
+//            uint8_t sizePTemp           = sizeof(pTemp);
+//            uint8_t sizeAX            = sizeof(aX);
+//            uint8_t sizeAY            = sizeof(aY);
+//            uint8_t sizeAZ            = sizeof(aZ);
+//            uint8_t sizeMX            = sizeof(mX);
+//            uint8_t sizeMY            = sizeof(mY);
+//            uint8_t sizeMZ            = sizeof(mZ);
+//            uint8_t sizeGX            = sizeof(gX);
+//            uint8_t sizeGY            = sizeof(gY);
+//            uint8_t sizeGZ            = sizeof(gZ);
+            uint16_t sizeWriteBuffer     = sizeof(writeBuffer);
+
+//            System_printf("\t2. Data sized.\n");
+//            System_flush();
+
+            /* 3. Calculate data packet sizing */
+            /* Get rid of this eventually, move to manually setting dataPacketSize once all sensors are config'd & sizing is known */
+
+            uint8_t dataPacketSize = sizeThisRed + sizeThisNir + sizeDieTempC + sizeAmbientTempC;
+//            uint8_t flushInterval  = FATSD_BUFF_SIZE / (uint16_t)dataPacketSize;
+
+            /* 3. Concatenate the above data reads into writeBuffer for later fatsd file write */
+
+            writeBuffer.red[writeBufferPointer]             = thisRed;
+            writeBuffer.nir[writeBufferPointer]             = thisNir;
+            writeBuffer.dieTempC[writeBufferPointer]        = dieTempC;
+            writeBuffer.ambientTempC[writeBufferPointer]    = ambientTempC;
+//            writeBuffer.pressure[writeBufferPointer]        = pressure;
+//            writeBuffer.pTemp[writeBufferPointer]           = pTemp;
+//            writeBuffer.ax[writeBufferPointer]              = aX;
+//            writeBuffer.ay[writeBufferPointer]              = aY;
+//            writeBuffer.az[writeBufferPointer]              = aZ;
+//            writeBuffer.mx[writeBufferPointer]              = mX;
+//            writeBuffer.my[writeBufferPointer]              = mY;
+//            writeBuffer.mz[writeBufferPointer]              = mZ;
+//            writeBuffer.gx[writeBufferPointer]              = gX;
+//            writeBuffer.gy[writeBufferPointer]              = gY;
+//            writeBuffer.gz[writeBufferPointer]              = gZ;
+
+//            System_printf("\t3. Data stored in writeBuffer.\n");
+//            System_flush();
+
+            /* 4. Increment the writeBufferPointer. When it hits flushInterval (~2k), write to sd card and reset writeBufferPointer to 0 */
+
+            writeBufferPointer  += 1;               // Increment writeBufferPointer every time data is added to buffer
+            writeBufferSize     += dataPacketSize;  // Increment writeBufferSize every time data is added to buffer, based on size of data passed in
+//            System_printf("\t4. writeBufferPointer: %d | writeBufferSize: %d\n", writeBufferPointer, writeBufferSize);
+//            System_flush();
+
+            // uint8_t flushTime = iterate % 128;   // ITERATE GOES AWAY W/O FOR LOOP / DURING WHILE LOOP -- FIX THIS!!!!
+
+            /* 5. Do write before writeBufferSize > FATSD_BUFF_SIZE */
+
+            // if ( (flushTime == 0 ) && (writeBufferPointer == 128) ) {            // I.e.: when the writeBuffer has 128 elements = 2048 bytes = 1 sd card block
+            // if ( !(testTimer % 100) ) {                                          // Try using only (!(testTimer % 100))  // i.e.: when 100 ms have passed, do the following
+
+            if ( (writeBufferSize == 2048) || (writeBufferSize + ((uint32_t)dataPacketSize) > 2048)  ) {         // If next data aggregate will cause buffer > 2k, write buffer now
+
+                /* Time to write the writeBuffer to non-volatile memory! */
+                // bytesRead = 2048;                                               // Adjust this later, so that it happens dynamically based on sizeof() sensor data samples
+                // bytesWritten = fwrite(&writeBuffer, 1, bytesRead, dst);
+
+                bytesWritten = fwrite(&writeBuffer, 1, writeBufferSize, dst);
+                uint8_t sdFlush = fflush(dst);
+
+                if (bytesWritten > 0) {                                             // If at least one byte is written to nvm...
+
+                    /* increment fileSizeMultiplier, then reset the writeBufferPointer, so no buffer overflowing! */
+                    totalBytesWritten   += (uint32_t)bytesWritten;                  // Compute total bytes committed to nvm
+                    fileSizeMultiplier  += 1;                                       // Number of samples written to sd / non-volatile memory
+
+//                    System_printf("\tTick: %d | Bytes written: %d | Bytes read: %d\n\t\ttotalBytesWritten: %d | flushReturn: %d | flushInterval: %d\n",
+//                                                     testTimer, bytesWritten, writeBufferSize, totalBytesWritten, sdFlush, flushInterval);
+//                    System_flush();
+
+                    writeBufferPointer  = 0;                        // Reset the writeBufferPointer
+                    writeBufferSize     = 0;                        // Reset the writeBufferSize (avoids endless conditional writing)
+
+                }
+
+                if (bytesWritten < bytesRead) {
+                    /* Error or Disk Full */
+                    System_printf("\t*** Disk Full error. Something's not working right... Investigate! ***\n");
+                    System_flush();
+                }
+
+
+            }
+
+            if (DEBUGPRINT) {
+                if (ledMode == 3)
+                    System_printf("\t\tIteration: %d | Green: %d | Red: %d | NIR: %d | dietempC: %f°C | ambientTempC: %f°C\n",
+                              testTimer, thisGreen, thisRed, thisNir, dieTempC, ambientTempC);
+                else if (ledMode == 2)
+                    System_printf("\t\tIteration: %d | Red: %d | NIR: %d | dietempC: %f°C | ambientTempC: %f°C\n",
+                              testTimer, thisRed, thisNir, dieTempC, ambientTempC);
+                    System_printf("\t\tData Sizings = %d %d %d %d %d %d %d \n",
+                                  sizeThisRed, sizeThisNir, sizeDieTempC, sizeAmbientTempC, sizeWriteBuffer, writeBufferPointer, fileSizeMultiplier);
+
+                System_flush();
+            }
+
+        }
 
     }
+
+    /* END SAMPLING LOOP HERE */
+
+    System_printf("\n\nSampling ended. Here's the stats:\n");
+    System_printf("\ttestTimer end (ms): %d | totalBytesWritten: %d | fileSizeMultiplier: %d\n", testTimer, totalBytesWritten, fileSizeMultiplier);
+    System_flush();
+
+    System_printf("\nTransitioning to 'off-animal' mode'.\n");
+    System_flush();
+
+    /* Shutdown MAX30105 */
+    System_printf("\tQuieting sensors...\n");
+    System_flush();
+    particleSensor.shutDown(i2c);
+
+    /* Close I2C Bus */
+    I2C_close(i2c);
+    System_printf("\tI2C bus closed!\n");
+    System_flush();
+
+    /* Close the file handle */
+    uint8_t closeFile = fclose(dst);
+    System_printf("\tFinished writing data to SD. fclose: #%d.\n", closeFile);
+    System_flush();
+
+    /* Flush and close SDSPI Bus */
+    SDSPI_close(sdspiHandle);
+    System_printf("\tDrive %u unmounted\n\n", DRIVE_NUM);
+
+    /*
+     *  TRANSITION TO DRY-MODE -- OFF-ANIMAL and ON-CHARGER
+     */
+
+    /* Reopen SDSPI and do a read of data */
+
+    /* Variables to keep track of the file copy progress */
+    bytesRead = 0;
+    bytesWritten = 0;
+
+    /* Mount and register the SD Card */
+    SDSPI_Params_init(&sdspiParams);
+    sdspiHandle = SDSPI_open(Board_SDSPI0, DRIVE_NUM, &sdspiParams);
+
+    if (sdspiHandle == NULL) {
+        System_abort("Error starting the SD card\n");
+    } else {
+        System_printf("Entering SD Card read phase.\nDrive %u was successfully mounted.\n", DRIVE_NUM);
+        System_flush();
+    }
+
+    /* Try to open the source file */
+    src = fopen(constFileName, "r");
+    if (!src) {
+        System_printf("File \"%s\" is not present on SD Card...\n", constFileName);
+        System_flush();
+    } else {
+        System_printf("File %s was opened for read.\n", constFileName);
+        System_flush();
+    }
+
+    // uint32_t bytesToRead = FATSD_BUFF_SIZE * fileSizeMultiplier;
+    uint32_t bytesToRead = totalBytesWritten;
+
+    System_printf("\tbytesToRead should be: %d.\n", bytesToRead);
+    System_flush();
+
+    /* Try to open the tab-delimited text file we'll write all data to */
+
+    const char textFileName[] = "fat:0:tagOS1.txt\0";                               // if above line fails, switch to this one and be done with it!
+
+    dst = fopen(textFileName, "w+");
+    if (!dst) {
+        /* If file doesn't exist, create it and start writing */
+        System_printf("\tAttempting to create fileName: %s\n", textFileName);
+                System_flush();
+        dst = fopen(textFileName, "w+");
+        if (!dst) {
+            System_abort("\tFile creation failed! Probably best to bail and sort out now.\n");
+        } else {
+            System_printf("\tFile created and ready for write!\n");
+            System_flush();
+        }
+    }
+    else {
+        // This condition probably shouldn't happen with fopen "w+" fopen above. "w+" = create and overwrite. But catch it anyway...
+        System_printf("\t*** File '%s' is already present. It should've been created from scratch, but is being reopened instead. Investigate! ***\n", textFileName);
+        System_flush();
+    }
+
+    uint32_t sdBlock = 0;                   // Initialize sd card block count
+
+    uint32_t textBytesWritten   = 0;         // Initialize a new byte counter for number of text file conversion bytes written
+    writeBufferPointer          = 0;                 // Re-init existing writeBufferPointer
+    writeBufferSize             = 0;                 // Re-init existing writeBufferSize
+    char tempText[512]          = "";
+    char textBuffer[4096]       = "";
+
+    /* Add a text header to the start of the textBuffer */
+    sprintf(tempText, "red\tnir\tdieTempC\tambientTemp\n");
+    strcpy(textBuffer, tempText);
+
+    do {
+
+        bytesRead = fread(&readBuffer, 1, FATSD_BUFF_SIZE, src);
+        uint32_t readPosition = ftell(src);
+
+        bytesToRead = bytesToRead - bytesRead;
+
+        for (uint8_t i = 0; i < 127; i++) {
+            writeBuffer.red[i] = readBuffer.red[i];
+            writeBuffer.nir[i] = readBuffer.nir[i];
+            writeBuffer.dieTempC[i] = readBuffer.dieTempC[i];
+            writeBuffer.ambientTempC[i] = readBuffer.ambientTempC[i];
+
+            sprintf(tempText, "%d\t%d\t%f\t%f\n", writeBuffer.red[i], writeBuffer.nir[i], writeBuffer.dieTempC[i], writeBuffer.ambientTempC[i] );
+
+            if (sdBlock == 0 && i == 0 ) {
+                strcat(textBuffer, tempText);
+            } else if (sdBlock > 0 && i == 0) {
+                strcpy(textBuffer, tempText);
+            } else {
+                strcat(textBuffer, tempText);
+            }
+
+//            System_printf("%s\n", tempText);
+//            System_printf("%s\n", textBuffer);
+//            System_flush();
+
+        }
+
+        uint16_t textBufferSize = sizeof(textBuffer);
+
+        if ( (textBufferSize >= 3840) && (textBufferSize <= 4096) ) {
+            // Write to file when bytes between 3840 and 4096
+            bytesWritten = fwrite(&textBuffer, 1, textBufferSize, dst);
+        }
+
+        strcpy(tempText, "");
+        strcpy(textBuffer, "");
+
+        textBytesWritten += (uint32_t)bytesWritten;
+
+//        System_printf("fread stats :: | bytesRead: %d | bytesToRead: %d | readPos: %d\n", bytesRead, bytesToRead, readPosition);
+//        System_flush();
+
+//        for (uint8_t j = 0; j <= 127; j+=64) {
+//
+//            System_printf("\tdata spot-check :: | sdBlock: %d | Var: %d | Red: %d | NIR: %d | dieTempC: %f | ambientTempC: %f\n",
+//                          sdBlock, j, readBuffer.red[j], readBuffer.nir[j], readBuffer.dieTempC[j], readBuffer.ambientTempC[j]);
+//            System_flush();
+//        }
+
+        sdBlock += 1;
+
+    } while (bytesToRead > 0);
+
+    System_printf("Conversion to text stats :: Bytes read: %d | Bytes of text written: %d\n", bytesRead, textBytesWritten);
+    System_flush();
+
+    closeFile = fclose(src);
+    System_printf("Finished reading data from SD. fclose: #%d.\n", closeFile);
+
+    uint8_t closeTextFile = fclose(dst);
+    System_printf("Finshed writing text data to SD. fclose: #%d.\n", closeTextFile);
+    System_flush();
+
+    /* Flush and close SDSPI Bus */
+    SDSPI_close(sdspiHandle);
+    System_printf("Drive %u unmounted\n", DRIVE_NUM);
+
+    /* End record timestamp */
+    timeStamp.century   = cl2.getCentury();
+    timeStamp.year      = cl2.getYear();
+    timeStamp.month     = cl2.getMonth();
+    timeStamp.day       = cl2.getDay();
+    timeStamp.hour      = cl2.getHour();
+    timeStamp.minute    = cl2.getMinute();
+    timeStamp.second    = cl2.getSecond();
+
+    System_printf("Record end = %d%d-%.2d-%.2d %.2d:%.2d:%.2d\n", timeStamp.century, timeStamp.year,
+                  timeStamp.month, timeStamp.day, timeStamp.hour, timeStamp.minute, timeStamp.second);
+    System_flush();
 
 }
 
@@ -269,6 +644,7 @@ int main(void) {
     Board_initGeneral();             // Call board init functions
     Board_initGPIO();
     Board_initI2C();
+    Board_initSDSPI();              // 21Jul - DKH - Added for microSD_FatFS_write
 
     // Construct a main task thread that does some I2C comms using MAX30105 class
     // then some raw I2C register reads to get WHOAMI values of other I2C devices
@@ -278,14 +654,14 @@ int main(void) {
     taskParams.stack = &task0Stack;
     Task_construct(&task0Struct, (Task_FuncPtr)taskFxn, &taskParams, NULL);
 
-    // Construct a sampling rate thread (e.g.: this will do 250 Hz) cycling
+    // Construct a sampling rate thread - this will do 250 Hz sampling; clock speed determined below (see cl1)
     Task_Params_init(&taskParams);
     taskParams.arg0 = (UArg)&cl3;
     taskParams.stackSize = TASKSTACKSIZE;
     taskParams.stack = &task1Stack;
     Task_construct(&task1Struct, (Task_FuncPtr)clockTask, &taskParams, NULL);
 
-    // Construct a timer thread that does BIOS_exit (terminates execution) after a set time
+    // Construct a timer thread that does BIOS_exit (terminates execution) after a set time - determined below (see cl2)
     taskParams.arg0 = (UArg)&cl4;
     taskParams.stack = &task2Stack;
     Task_construct(&task2Struct, (Task_FuncPtr)clockTask, &taskParams, NULL);
@@ -303,13 +679,15 @@ int main(void) {
     sem1Handle = Semaphore_Handle(&sem1Struct);
 
     Clock_Params_init(&clkParams);
-    clkParams.period = 250;                                 // Altering, was 100ms; used 4ms = 250Hz; now 250ms = 4 Hz
+
+    /* set cl0 tickTime = 10ms or 100Hz */
+    clkParams.period = 1;                                 // 4ms = 250 Hz | 5ms = 200Hz | 10ms = 100Hz | 250ms = 4 Hz
     clkParams.startFlag = true;
     clkParams.arg = (UArg)&cl1;
     Clock_construct(&clk0Struct, (Clock_FuncPtr)clockPrd, 1, &clkParams);
 
-    // clkParams.period = 1000;                           // clockPeriod default = 1000, or 1 second
-    clkParams.period = 60000;                              // test clockPeriod default = 1000 * 60 = 1 minute
+    /* set cl1 tickTime = 60000 ms or 1 minute */
+    clkParams.period = 60000;                             // clockPeriod default = 1000 = 1 second | 1000 * 60 = 60000 = 1 minute
     clkParams.startFlag = true;
     clkParams.arg = (UArg)&cl2;
     Clock_construct(&clk1Struct, (Clock_FuncPtr)clockPrd, 1, &clkParams);

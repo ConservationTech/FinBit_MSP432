@@ -81,11 +81,11 @@ Clock::Clock(int newId)
     ticks = 0;
     microsecond = 0;
     millisecond = 0;
-    second = 0;
-    minute = 55;
-    hour = 17;
-    day = 30;
-    month = 6;
+    second = 30;
+    minute = 9;
+    hour = 8;
+    day = 31;
+    month = 7;
     year = 17;
     century = 20;
     millenium = 0;
@@ -109,30 +109,31 @@ void Clock::tick()
 
         // Test lighting the blue LED every clock1 pass
 
-        GPIO_toggle(Board_LED0);                        // Toggle LED1 i.e.: the standalone RED LED
-
+        // GPIO_toggle(Board_LED0);                        // Toggle LED1 i.e.: the standalone RED LED
         // GPIO_toggle(Board_250HZ);                       // Toggle Pin 4.1 every 4ms
+        // GPIO_write(Board_250HZ, 0);                     // Pulse Pin 4.1 low....
+        // GPIO_write(Board_250HZ, 1);                     //       ... then high on every clock cycle; check it on oscilloscope
 
-        GPIO_write(Board_250HZ, 0);
-        GPIO_write(Board_250HZ, 1);
-
-        setMillisecond(0.4);            // originally 100 = 10Hz, so every minute; tested 4 = 25 Hz, trying 0.4 for 250Hz
+        // setMillisecond(0.5);             // originally 100 = 10Hz, so every minute; tested 4 = 25 Hz, trying 0.4 for 250Hz, or 0.5 for 200Hz
+        setMillisecond(1);                  // try 1 millisecond ticks
 
     }
-    if (getId() == 2) {             /* THIS IS ACTING AS A 1 SECOND or 1 Hz CLOCK ROUTINE, BEFORE BIOS_exit AFTER 15 SECONDS  */
+    if (getId() == 2) {             /* THIS IS ACTING AS A 1 SECOND or 1 Hz CLOCK ROUTINE, BEFORE BIOS_exit AFTER 2 MINUTES */
 
-        System_printf("id %d : %d:%d:%d\n", getId(), hour, minute, second);
-        //System_printf("id %d : %s %d, %d%d\n", getId(), (IArg)months[month-1], day, century, year);
+        // System_printf("\tid %d : %d:%d:%d\n", getId(), hour, minute, second);
+        // System_printf("id %d : %s %d, %d%d\n", getId(), (IArg)months[month-1], day, century, year);
+
         /*
          * Change selected function to alter clock rate
          */
+
 //      setMicrosecond();
 //      setMillisecond();
 //      setSecond();                    // Originally this was enabled to make this clock run in units of seconds
         setMinute();                    // Now setting for one minute as a potential burn after x hours y minutes test
 //      setHour();
 //      setDay();
-        if (ticks == 2) {              // Originally this was set to run for 2 seconds, I bumped to 1, which makes it go run for 1 minutes
+        if (ticks == 5) {              // Originally this was set to run for 2 seconds, now minute timer, which runs for 5 minutes
             clockTerminate(0);
         }
     }
@@ -380,7 +381,7 @@ void clockTerminate(UArg arg)
 {
     Clock *clock = (Clock *)arg;
 
-    System_printf("Heading for BIOS_exit after %d clockTicks (ms) of execution.\n", clock->getTicks());
+    System_printf("Heading for BIOS_exit after %d clockTicks (ms) of execution.\n", clock->getMillisecond());
 
     if (GPIO_read(Board_LED0)) {
         GPIO_write(Board_LED0, Board_LED_OFF);              // Turn off the standalone red LED if it's turned on, to indicate BIOS_exit

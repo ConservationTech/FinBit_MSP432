@@ -455,7 +455,7 @@ void MAX30105::disableDIETEMPRDY(I2C_Handle i2c) {
 }
 
 // Setup the sensor. The MAX30105 has many settings. By default we select:
-//          Sample Average = 4
+//          Sample Average = 1
 //          Mode = MultiLED
 //          ADC Range = 16384 (62.5pA per LSB)
 //          Sample rate = 50
@@ -472,7 +472,7 @@ void MAX30105::setup(I2C_Handle i2c, uint8_t powerLevel, uint8_t sampleAverage, 
   else if (sampleAverage == 8) setFIFOAverage(i2c, MAX30105_SAMPLEAVG_8);
   else if (sampleAverage == 16) setFIFOAverage(i2c, MAX30105_SAMPLEAVG_16);
   else if (sampleAverage == 32) setFIFOAverage(i2c, MAX30105_SAMPLEAVG_32);
-  else setFIFOAverage(i2c, MAX30105_SAMPLEAVG_4);
+  else setFIFOAverage(i2c, MAX30105_SAMPLEAVG_1);
 
   //setFIFOAlmostFull(2); //Set to 30 samples to trigger an 'Almost Full' interrupt
   enableFIFORollover(i2c); //Allow FIFO to wrap/roll over
@@ -836,15 +836,8 @@ void MAX30105::readFIFODATA(I2C_Handle i2c, uint8_t regAddr, uint8_t numBytesToR
 
     // The third declaration of uint8_t rxBuffer[3] works great for reading Red only. Now find a way to read Red, NIR, and Green programmatically...
     uint8_t             rxBuffer3[3], rxBuffer6[6], rxBuffer9[9];
-    // uint8_t             rxBuffer[numBytesToRead];       // Doesn't work, as alloc throws fits over variable rxBuffer matrix variable sizing on numBytesToRead
-    // uint8_t             rxBuffer[3];
 
     I2C_Transaction     i2cTransaction;
-
-//    ledValues[0] = 0;
-//    ledValues[1] = 0;
-//    ledValues[2] = 0;
-//    zero = 0;
 
     i2cTransaction.slaveAddress = Board_MAX30105_ADDR;
 
@@ -869,10 +862,11 @@ void MAX30105::readFIFODATA(I2C_Handle i2c, uint8_t regAddr, uint8_t numBytesToR
     txBuffer[0] = regAddr;
     // txBuffer[1] = 0x01;
 
-    // if (!I2C_transfer(handle, &i2cTransaction)) {      this was how this was prior to making MAX30105 class. See if next line works...
     if (!I2C_transfer(i2c, &i2cTransaction)) {
+        GPIO_write(Board_LED2, Board_LED_OFF);
         GPIO_write(Board_LED1, Board_LED_ON);
-        System_abort("Bad I2C transfer!");
+        GPIO_toggle(Board_LED1);
+        System_abort("Bad I2C transfer during MAX30105::readFIFOData - aborting tagOS!");
     } else {
 
         if (numBytesToRead == 3) {
@@ -953,7 +947,7 @@ void MAX30105::readFIFODATA(I2C_Handle i2c, uint8_t regAddr, uint8_t numBytesToR
             }
 
         } else {
-            System_printf("This is a weird condition, where numBytesToRead != 3, 6 or 9. Ruh roh.\n");
+            System_printf("This is bad and should never happen -- numBytesToRead != 3, 6 or 9. Ruh roh.\n");
             System_flush();
         }
 

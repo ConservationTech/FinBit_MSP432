@@ -309,7 +309,7 @@ void MSP_EXP432P401R_initI2C(void)
 const PowerMSP432_ConfigV1 PowerMSP432_config = {
     .policyInitFxn = &PowerMSP432_initPolicy,
     .policyFxn = &PowerMSP432_sleepPolicy,
-    .initialPerfLevel = 2,
+    .initialPerfLevel = 4,                          // default = 2; trying with default = 4
     .enablePolicy = true,
     .enablePerf = true,
     .enableParking = true

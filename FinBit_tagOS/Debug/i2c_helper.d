@@ -78,6 +78,7 @@ i2c_helper.obj: /Users/dave/ti/xdctools_3_32_00_06_core/packages/xdc/runtime/IIn
 i2c_helper.obj: /Users/dave/ti/xdctools_3_32_00_06_core/packages/xdc/runtime/IGateProvider.h
 i2c_helper.obj: /Users/dave/ti/xdctools_3_32_00_06_core/packages/xdc/runtime/package/System_SupportProxy.h
 i2c_helper.obj: /Users/dave/ti/xdctools_3_32_00_06_core/packages/xdc/runtime/package/System_Module_GateProxy.h
+i2c_helper.obj: /Users/dave/ti/xdctools_3_32_00_06_core/packages/xdc/runtime/Diags.h
 i2c_helper.obj: /Users/dave/ti/tirtos_msp43x_2_20_00_06/products/bios_6_46_00_23/packages/ti/sysbios/BIOS.h
 i2c_helper.obj: /Users/dave/ti/xdctools_3_32_00_06_core/packages/xdc/runtime/Types.h
 i2c_helper.obj: /Users/dave/ti/tirtos_msp43x_2_20_00_06/products/bios_6_46_00_23/packages/ti/sysbios/BIOS__prologue.h
@@ -161,6 +162,7 @@ i2c_helper.obj: /Users/dave/ti/tirtos_msp43x_2_20_00_06/products/tidrivers_msp43
 i2c_helper.obj: /Applications/ti/ccsv7/tools/compiler/ti-cgt-arm_16.9.1.LTS/include/stdbool.h
 i2c_helper.obj: /Applications/ti/ccsv7/tools/compiler/ti-cgt-arm_16.9.1.LTS/include/stddef.h
 i2c_helper.obj: ../i2c_helper.h
+i2c_helper.obj: ../system_clock.h
 i2c_helper.obj: ../Board.h
 i2c_helper.obj: ../MSP_EXP432P401R.h
 i2c_helper.obj: ../MAX30105.h
@@ -243,6 +245,7 @@ i2c_helper.obj: ../MAX30105.h
 /Users/dave/ti/xdctools_3_32_00_06_core/packages/xdc/runtime/IGateProvider.h: 
 /Users/dave/ti/xdctools_3_32_00_06_core/packages/xdc/runtime/package/System_SupportProxy.h: 
 /Users/dave/ti/xdctools_3_32_00_06_core/packages/xdc/runtime/package/System_Module_GateProxy.h: 
+/Users/dave/ti/xdctools_3_32_00_06_core/packages/xdc/runtime/Diags.h: 
 /Users/dave/ti/tirtos_msp43x_2_20_00_06/products/bios_6_46_00_23/packages/ti/sysbios/BIOS.h: 
 /Users/dave/ti/xdctools_3_32_00_06_core/packages/xdc/runtime/Types.h: 
 /Users/dave/ti/tirtos_msp43x_2_20_00_06/products/bios_6_46_00_23/packages/ti/sysbios/BIOS__prologue.h: 
@@ -326,6 +329,7 @@ i2c_helper.obj: ../MAX30105.h
 /Applications/ti/ccsv7/tools/compiler/ti-cgt-arm_16.9.1.LTS/include/stdbool.h: 
 /Applications/ti/ccsv7/tools/compiler/ti-cgt-arm_16.9.1.LTS/include/stddef.h: 
 ../i2c_helper.h: 
+../system_clock.h: 
 ../Board.h: 
 ../MSP_EXP432P401R.h: 
 ../MAX30105.h: 
