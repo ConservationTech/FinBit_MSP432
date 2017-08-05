@@ -292,8 +292,8 @@ void MSP_EXP432P401R_initI2C(void)
      * conflict before running your the application.
      */
     /* Configure Pins 1.6 & 1.7 as SDA & SCL, respectively. */
-    MAP_GPIO_setAsPeripheralModuleFunctionInputPin(GPIO_PORT_P1,
-        GPIO_PIN6 | GPIO_PIN7, GPIO_PRIMARY_MODULE_FUNCTION);
+//    MAP_GPIO_setAsPeripheralModuleFunctionInputPin(GPIO_PORT_P1,
+//        GPIO_PIN6 | GPIO_PIN7, GPIO_PRIMARY_MODULE_FUNCTION);
 
     /* Configure Pins 6.4 & 6.5 as SDA & SCL, respectively. */
     MAP_GPIO_setAsPeripheralModuleFunctionInputPin(GPIO_PORT_P6,
@@ -309,7 +309,7 @@ void MSP_EXP432P401R_initI2C(void)
 const PowerMSP432_ConfigV1 PowerMSP432_config = {
     .policyInitFxn = &PowerMSP432_initPolicy,
     .policyFxn = &PowerMSP432_sleepPolicy,
-    .initialPerfLevel = 4,                          // default = 2; trying with default = 4
+    .initialPerfLevel = 2,                          // default = 2; trying with default = 4
     .enablePolicy = true,
     .enablePerf = true,
     .enableParking = true

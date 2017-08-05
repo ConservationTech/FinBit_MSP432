@@ -103,7 +103,7 @@ extern "C" {
 //#define Board_MPU9250_ADDR          (0x68)                  // Sparkfun MPU-9250 Breakout  - 9-DOF Accel + Mag + Gyro IMU Sensor Package
 //#define Board_MPL3115A2_ADDR        (0x60)                  // Sparkfun MPL3115A2 Breakout - Altitude and Temperature (??) Sensor Package
 //#define Board_ADS1115_ADDR          (0x48)                  // Adafruit ADS1115 Breakout   - ADS1115 16-bit A0-A4 ADC with I2C Interface
-#define Board_MCP9808_ADDR          (0x18)                  // Adafruit MCP9808 Breakout   - MCP9808 Temperature Sensor
+//#define Board_MCP9808_ADDR          (0x18)                  // Adafruit MCP9808 Breakout   - MCP9808 Temperature Sensor
 
 #ifdef __cplusplus
 }

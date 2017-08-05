@@ -165,7 +165,39 @@ i2c_helper.obj: ../i2c_helper.h
 i2c_helper.obj: ../system_clock.h
 i2c_helper.obj: ../Board.h
 i2c_helper.obj: ../MSP_EXP432P401R.h
+i2c_helper.obj: ../modules.h
 i2c_helper.obj: ../MAX30105.h
+i2c_helper.obj: ../MCP9808.h
+i2c_helper.obj: /Users/dave/ti/xdctools_3_32_00_06_core/packages/xdc/runtime/Diags.h
+i2c_helper.obj: /Users/dave/ti/xdctools_3_32_00_06_core/packages/xdc/runtime/System.h
+i2c_helper.obj: /Users/dave/ti/tirtos_msp43x_2_20_00_06/products/bios_6_46_00_23/packages/ti/sysbios/BIOS.h
+i2c_helper.obj: /Users/dave/ti/tirtos_msp43x_2_20_00_06/products/bios_6_46_00_23/packages/ti/sysbios/knl/Semaphore.h
+i2c_helper.obj: /Users/dave/ti/xdctools_3_32_00_06_core/packages/xdc/runtime/Types.h
+i2c_helper.obj: /Users/dave/ti/xdctools_3_32_00_06_core/packages/xdc/runtime/IInstance.h
+i2c_helper.obj: /Users/dave/ti/xdctools_3_32_00_06_core/packages/xdc/runtime/Diags.h
+i2c_helper.obj: /Users/dave/ti/xdctools_3_32_00_06_core/packages/xdc/runtime/Log.h
+i2c_helper.obj: /Users/dave/ti/xdctools_3_32_00_06_core/packages/xdc/runtime/Assert.h
+i2c_helper.obj: /Users/dave/ti/tirtos_msp43x_2_20_00_06/products/bios_6_46_00_23/packages/ti/sysbios/knl/Queue.h
+i2c_helper.obj: /Users/dave/ti/tirtos_msp43x_2_20_00_06/products/bios_6_46_00_23/packages/ti/sysbios/knl/Task.h
+i2c_helper.obj: /Users/dave/ti/tirtos_msp43x_2_20_00_06/products/bios_6_46_00_23/packages/ti/sysbios/knl/Clock.h
+i2c_helper.obj: /Users/dave/ti/xdctools_3_32_00_06_core/packages/xdc/runtime/IModule.h
+i2c_helper.obj: /Users/dave/ti/tirtos_msp43x_2_20_00_06/products/bios_6_46_00_23/packages/ti/sysbios/knl/Event.h
+i2c_helper.obj: /Users/dave/ti/xdctools_3_32_00_06_core/packages/xdc/runtime/Types.h
+i2c_helper.obj: /Users/dave/ti/xdctools_3_32_00_06_core/packages/xdc/runtime/IInstance.h
+i2c_helper.obj: /Users/dave/ti/tirtos_msp43x_2_20_00_06/products/bios_6_46_00_23/packages/ti/sysbios/knl/Event__prologue.h
+i2c_helper.obj: /Users/dave/ti/xdctools_3_32_00_06_core/packages/xdc/runtime/Assert.h
+i2c_helper.obj: /Users/dave/ti/xdctools_3_32_00_06_core/packages/xdc/runtime/Diags.h
+i2c_helper.obj: /Users/dave/ti/xdctools_3_32_00_06_core/packages/xdc/runtime/Log.h
+i2c_helper.obj: /Users/dave/ti/tirtos_msp43x_2_20_00_06/products/bios_6_46_00_23/packages/ti/sysbios/knl/Queue.h
+i2c_helper.obj: /Users/dave/ti/tirtos_msp43x_2_20_00_06/products/bios_6_46_00_23/packages/ti/sysbios/knl/Clock.h
+i2c_helper.obj: /Users/dave/ti/tirtos_msp43x_2_20_00_06/products/bios_6_46_00_23/packages/ti/sysbios/knl/Task.h
+i2c_helper.obj: /Users/dave/ti/xdctools_3_32_00_06_core/packages/xdc/runtime/IModule.h
+i2c_helper.obj: /Users/dave/ti/tirtos_msp43x_2_20_00_06/products/bios_6_46_00_23/packages/ti/sysbios/knl/Event__epilogue.h
+i2c_helper.obj: /Users/dave/ti/tirtos_msp43x_2_20_00_06/products/bios_6_46_00_23/packages/ti/sysbios/knl/Task.h
+i2c_helper.obj: /Users/dave/ti/tirtos_msp43x_2_20_00_06/products/bios_6_46_00_23/packages/ti/sysbios/knl/Clock.h
+i2c_helper.obj: /Users/dave/ti/tirtos_msp43x_2_20_00_06/products/bios_6_46_00_23/packages/ti/sysbios/knl/package/Clock_TimerProxy.h
+i2c_helper.obj: ../MPU9250.h
+i2c_helper.obj: ../MS5803.h
 
 ../i2c_helper.cpp: 
 /Users/dave/ti/xdctools_3_32_00_06_core/packages/xdc/runtime/System.h: 
@@ -332,4 +364,36 @@ i2c_helper.obj: ../MAX30105.h
 ../system_clock.h: 
 ../Board.h: 
 ../MSP_EXP432P401R.h: 
+../modules.h: 
 ../MAX30105.h: 
+../MCP9808.h: 
+/Users/dave/ti/xdctools_3_32_00_06_core/packages/xdc/runtime/Diags.h: 
+/Users/dave/ti/xdctools_3_32_00_06_core/packages/xdc/runtime/System.h: 
+/Users/dave/ti/tirtos_msp43x_2_20_00_06/products/bios_6_46_00_23/packages/ti/sysbios/BIOS.h: 
+/Users/dave/ti/tirtos_msp43x_2_20_00_06/products/bios_6_46_00_23/packages/ti/sysbios/knl/Semaphore.h: 
+/Users/dave/ti/xdctools_3_32_00_06_core/packages/xdc/runtime/Types.h: 
+/Users/dave/ti/xdctools_3_32_00_06_core/packages/xdc/runtime/IInstance.h: 
+/Users/dave/ti/xdctools_3_32_00_06_core/packages/xdc/runtime/Diags.h: 
+/Users/dave/ti/xdctools_3_32_00_06_core/packages/xdc/runtime/Log.h: 
+/Users/dave/ti/xdctools_3_32_00_06_core/packages/xdc/runtime/Assert.h: 
+/Users/dave/ti/tirtos_msp43x_2_20_00_06/products/bios_6_46_00_23/packages/ti/sysbios/knl/Queue.h: 
+/Users/dave/ti/tirtos_msp43x_2_20_00_06/products/bios_6_46_00_23/packages/ti/sysbios/knl/Task.h: 
+/Users/dave/ti/tirtos_msp43x_2_20_00_06/products/bios_6_46_00_23/packages/ti/sysbios/knl/Clock.h: 
+/Users/dave/ti/xdctools_3_32_00_06_core/packages/xdc/runtime/IModule.h: 
+/Users/dave/ti/tirtos_msp43x_2_20_00_06/products/bios_6_46_00_23/packages/ti/sysbios/knl/Event.h: 
+/Users/dave/ti/xdctools_3_32_00_06_core/packages/xdc/runtime/Types.h: 
+/Users/dave/ti/xdctools_3_32_00_06_core/packages/xdc/runtime/IInstance.h: 
+/Users/dave/ti/tirtos_msp43x_2_20_00_06/products/bios_6_46_00_23/packages/ti/sysbios/knl/Event__prologue.h: 
+/Users/dave/ti/xdctools_3_32_00_06_core/packages/xdc/runtime/Assert.h: 
+/Users/dave/ti/xdctools_3_32_00_06_core/packages/xdc/runtime/Diags.h: 
+/Users/dave/ti/xdctools_3_32_00_06_core/packages/xdc/runtime/Log.h: 
+/Users/dave/ti/tirtos_msp43x_2_20_00_06/products/bios_6_46_00_23/packages/ti/sysbios/knl/Queue.h: 
+/Users/dave/ti/tirtos_msp43x_2_20_00_06/products/bios_6_46_00_23/packages/ti/sysbios/knl/Clock.h: 
+/Users/dave/ti/tirtos_msp43x_2_20_00_06/products/bios_6_46_00_23/packages/ti/sysbios/knl/Task.h: 
+/Users/dave/ti/xdctools_3_32_00_06_core/packages/xdc/runtime/IModule.h: 
+/Users/dave/ti/tirtos_msp43x_2_20_00_06/products/bios_6_46_00_23/packages/ti/sysbios/knl/Event__epilogue.h: 
+/Users/dave/ti/tirtos_msp43x_2_20_00_06/products/bios_6_46_00_23/packages/ti/sysbios/knl/Task.h: 
+/Users/dave/ti/tirtos_msp43x_2_20_00_06/products/bios_6_46_00_23/packages/ti/sysbios/knl/Clock.h: 
+/Users/dave/ti/tirtos_msp43x_2_20_00_06/products/bios_6_46_00_23/packages/ti/sysbios/knl/package/Clock_TimerProxy.h: 
+../MPU9250.h: 
+../MS5803.h: 

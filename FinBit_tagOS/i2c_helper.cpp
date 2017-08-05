@@ -37,9 +37,11 @@
 // #include "MSP_EXP432P401R.h"
 #include "Board.h"
 
-/* Include the MAX30105 header file */
-#include "MAX30105.h"
+#include "modules.h"
 
+#ifdef USE_MAX30105
+    #include "MAX30105.h"           /* Include the MAX30105 header file */
+#endif
 
 ///////  readRegisterU8 for SIGNED 8-bit status registers (e.g.: MAX30105 tempFrac value)
 
@@ -269,6 +271,7 @@ uint8_t runSensorChecks(I2C_Handle i2c) {
     /* Check aliveness of MAX30105 */
 
     partID = readRegisterU8(i2c, Board_MAX30105_ADDR, 0xFF, &partID, 1);
+    Task_sleep(1);
     if (partID == 0x15) {
         System_printf("\tMAX30105: alive!\n");
         System_flush();
@@ -295,16 +298,16 @@ uint8_t runSensorChecks(I2C_Handle i2c) {
 
     /* Check aliveness of MCP9808 sensor package */
 
-//    partID = readRegisterU8(i2c, Board_MCP9808_ADDR, 0x07, &partID, 1);
-//    if (partID == 0x04) {
-//        System_printf("\tMCP9808: alive!\n");
-//        System_flush();
-//        badSensors += 0;
-//    } else {
-//        badSensors += 1;
-//        System_printf("\tPartID = %d. That's not the expected WHOAMI value for MCP9808!\n", partID);
-//        System_flush();
-//    }
+    partID = readRegisterU8(i2c, Board_MCP9808_ADDR, 0x07, &partID, 1);
+    if (partID == 0x04) {
+        System_printf("\tMCP9808: alive!\n");
+        System_flush();
+        badSensors += 0;
+    } else {
+        badSensors += 1;
+        System_printf("\tPartID = %d. That's not the expected WHOAMI value for MCP9808!\n", partID);
+        System_flush();
+    }
 
 
     /* Check aliveness of MS5803-14BA sensor package */

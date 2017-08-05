@@ -133,7 +133,7 @@ void Clock::tick()
         setMinute();                    // Now setting for one minute as a potential burn after x hours y minutes test
 //      setHour();
 //      setDay();
-        if (ticks == 5) {              // Originally this was set to run for 2 seconds, now minute timer, which runs for 5 minutes
+        if (ticks == 2) {              // Originally this was set to run for 2 seconds, now minute timer, which runs for 120 seconds
             clockTerminate(0);
         }
     }

@@ -46,7 +46,12 @@
 
 #include "MCP9808.h"
 
-#define DEBUGPRINT          true
+#include "i2c_helper.h"
+#include "interfaces.h"
+#include "modules.h"
+#include "condPrintf.h"
+
+// #define DEBUGPRINT          true
 
 /**************************************************************************/
 /*!
@@ -63,28 +68,53 @@ MCP9808::MCP9808() {
 /**************************************************************************/
 bool MCP9808::begin(I2C_Handle i2c, uint8_t regAddr) {
 
+    bool returnFlag = false;
+
     if (i2c == NULL) {
-        System_abort("Error Initializing I2C inside MCP9808 class. That's a problem!\n");
-        System_flush();
-        return false;
-    }
-    else {
-        if (read16(i2c, MCP9808_REG_MANUF_ID) != 0x0054) return false;
-        if (read16(i2c, MCP9808_REG_DEVICE_ID) != 0x0400) return false;
+
+        if (debugPrint) {
+            System_abort("Error Initializing I2C inside MCP9808 class. That's a problem!\n");
+            System_flush();
+            returnFlag = false;
+        }
+
+
+    } else if (read16(i2c, MCP9808_REG_MANUF_ID) != 0x0054) {
+
+        if (debugPrint) {
+            System_abort("Bad manufacturer ID from MCP9808 class. That's a problem!\n");
+            System_flush();
+            returnFlag = false;
+        }
+
+    } else if (read16(i2c, MCP9808_REG_DEVICE_ID) != 0x0400) {
+
+        if (debugPrint) {
+            System_abort("Bad device ID from MCP9808 class. That's a problem!\n");
+            System_flush();
+            returnFlag = false;
+        }
+
+    } else {
 
         // Skip - but add conditional to make sure there's graceful failure if !MCP9808
         // if (!readPartID(i2c) == MCP9808_REG_DEVICE_ID) {
           // Error -- Part ID read from MAX30105 does not match expected part ID.
           // This may mean there is a physical connectivity problem (broken wire, unpowered, etc).
-        if (DEBUGPRINT) {
+
+        if (debugPrint) {
             System_printf("Opening communication with MCP9808... time to gather some data!\n");
             System_flush();
 
             write16(i2c, MCP9808_REG_CONFIG, 0x0);
-            return true;
+            returnFlag = true;
 
         }
+
     }
+
+    return(returnFlag);
+
 }
 
 

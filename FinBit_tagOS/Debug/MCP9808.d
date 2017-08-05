@@ -195,6 +195,13 @@ MCP9808.obj: /Users/dave/ti/tirtos_msp43x_2_20_00_06/products/bios_6_46_00_23/pa
 MCP9808.obj: /Users/dave/ti/tirtos_msp43x_2_20_00_06/products/bios_6_46_00_23/packages/ti/sysbios/knl/Semaphore.h
 MCP9808.obj: /Users/dave/ti/tirtos_msp43x_2_20_00_06/products/bios_6_46_00_23/packages/ti/sysbios/knl/Task.h
 MCP9808.obj: /Users/dave/ti/tirtos_msp43x_2_20_00_06/products/bios_6_46_00_23/packages/ti/sysbios/knl/Clock.h
+MCP9808.obj: ../i2c_helper.h
+MCP9808.obj: ../interfaces.h
+MCP9808.obj: ../modules.h
+MCP9808.obj: ../MAX30105.h
+MCP9808.obj: ../MPU9250.h
+MCP9808.obj: ../MS5803.h
+MCP9808.obj: ../condPrintf.h
 
 ../MCP9808.cpp: 
 /Users/dave/ti/xdctools_3_32_00_06_core/packages/xdc/std.h: 
@@ -391,3 +398,10 @@ MCP9808.obj: /Users/dave/ti/tirtos_msp43x_2_20_00_06/products/bios_6_46_00_23/pa
 /Users/dave/ti/tirtos_msp43x_2_20_00_06/products/bios_6_46_00_23/packages/ti/sysbios/knl/Semaphore.h: 
 /Users/dave/ti/tirtos_msp43x_2_20_00_06/products/bios_6_46_00_23/packages/ti/sysbios/knl/Task.h: 
 /Users/dave/ti/tirtos_msp43x_2_20_00_06/products/bios_6_46_00_23/packages/ti/sysbios/knl/Clock.h: 
+../i2c_helper.h: 
+../interfaces.h: 
+../modules.h: 
+../MAX30105.h: 
+../MPU9250.h: 
+../MS5803.h: 
+../condPrintf.h: 
